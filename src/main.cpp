@@ -1,33 +1,50 @@
 #include <Arduino.h>
 #include <DHT.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 // Define pin location and sensor type
 #define DHTPIN 0
 #define DHTTYPE DHT11
 
-float temp, humid;
+#define DS18_PIN 1
+
+#define STATUS_LED 13
+
+float temp, humid, tempDS18;
 
 // Instantiate the sensor object
 DHT dht_sensor(DHTPIN, DHTTYPE);
+OneWire onwire(DS18_PIN);
+DallasTemperature DS18_sensor(&onwire);
 
 void setup() {
+
+  pinMode(STATUS_LED, OUTPUT);
+  digitalWrite(STATUS_LED, LOW);
 
   // Initialize the sensor and Serial baud rate
   Serial.begin(9600);
   dht_sensor.begin();
+  DS18_sensor.begin();
 }
 
 void loop() {
 
-  // Wait 1 second before next read
-  delay(1000);
+  digitalWrite(STATUS_LED, LOW);
 
   // Get the Temperature and Humidity
-  temp = dht_sensor.readTemperature(true);
   humid = dht_sensor.readHumidity();
+
+  DS18_sensor.requestTemperatures();
+
+  tempDS18 = DS18_sensor.getTempFByIndex(0);
+
+  digitalWrite(STATUS_LED, HIGH);
+  delay(2000);
 
   // Output the data
   Serial.printf("\nHumidity: %.2f\n", humid);
-  Serial.printf("Temperature: %.2f\n", temp);
+  Serial.printf("Temperature from DS18: %.2f\n", tempDS18);
 
 }
