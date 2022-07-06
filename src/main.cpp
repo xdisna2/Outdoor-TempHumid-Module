@@ -1,7 +1,13 @@
 #include <Arduino.h>
+
+// Sensor Libraries
 #include <DHT.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+
+// Required SD Card libraries
+#include <SD.h>
+#include <SPI.h>
 
 // Define pin location and sensor type
 #define DHTPIN 0
@@ -18,8 +24,12 @@ DHT dht_sensor(DHTPIN, DHTTYPE);
 OneWire onwire(DS18_PIN);
 DallasTemperature DS18_sensor(&onwire);
 
+// Initialize FILE object
+File testFile;
+
 void setup() {
 
+  // LED status initialization
   pinMode(STATUS_LED, OUTPUT);
   digitalWrite(STATUS_LED, LOW);
 
@@ -27,6 +37,25 @@ void setup() {
   Serial.begin(9600);
   dht_sensor.begin();
   DS18_sensor.begin();
+
+  // Initialize the SD Card
+  SD.begin(BUILTIN_SDCARD);
+  testFile = SD.open("test.txt", FILE_WRITE);
+
+  // Begin writing to file
+  if(testFile){
+    testFile.println("Hello World!");
+    testFile.close();
+  }
+
+  testFile = SD.open("test.txt", FILE_READ);
+  if(testFile){
+    while(testFile.available()){
+
+      Serial.write(testFile.read());
+    }
+  }
+
 }
 
 void loop() {
